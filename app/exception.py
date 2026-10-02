@@ -39,8 +39,3 @@ CannotDemoteLastAdminException = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST,
     detail="Нельзя изменить роль последнего действующего администратора системы",
 )
-
-ProjectNotFoundException = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
-    detail="Проект не найден",
-)

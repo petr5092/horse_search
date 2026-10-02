@@ -3,9 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.users.models import Users
-from app.projects.models import Projects
 from app.users.router import router as router_users
-from app.projects.router import router as router_projects
 
 # Create tables in database via SQLAlchemy ORM metadata
 Base.metadata.create_all(bind=engine)
@@ -27,7 +25,6 @@ app.add_middleware(
 
 # Routers by objects
 app.include_router(router_users)
-app.include_router(router_projects)
 
 
 @app.get("/", tags=["Система"])
