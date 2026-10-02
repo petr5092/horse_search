@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base
+from app.database import init_db
 from app.users.router import router as router_users
 
-# Synchronous table creation
-Base.metadata.create_all(bind=engine)
+# Initialize tables via pure raw SQL DDL
+init_db()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
