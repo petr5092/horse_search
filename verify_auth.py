@@ -109,6 +109,33 @@ def run_tests():
     assert len(all_users) == 2
     print(f"[OK] /auth/all retrieved {len(all_users)} users")
 
+    print("\n--- 11. Testing Project Creation (POST /projects) by Admin ---")
+    res = admin_client.post("/projects", json={
+        "name": "Детекция лошадей ВИМ 640x640",
+        "schema_version": "1.0",
+        "target_size": 640,
+        "description": "Экспериментальная ферма ВИМ, мониторинг перемещения и подсчет лошадей"
+    })
+    assert res.status_code == 201, res.text
+    project_data = res.json()
+    assert project_data["target_size"] == 640
+    print(f"[OK] Project created: '{project_data['name']}', target_size={project_data['target_size']}px")
+
+    print("\n--- 12. Testing RBAC on Projects: Annotator cannot create projects ---")
+    res = user_client.post("/projects", json={
+        "name": "Попытка аннотатора создать проект",
+        "target_size": 640
+    })
+    assert res.status_code == 403
+    print(f"[OK] Blocked annotator project creation with 403 Forbidden")
+
+    print("\n--- 13. Testing Reading Projects (GET /projects) ---")
+    res = user_client.get("/projects")
+    assert res.status_code == 200
+    projects_list = res.json()
+    assert len(projects_list) == 1
+    print(f"[OK] Projects list accessible to team members: found {len(projects_list)} project(s)")
+
     print("\n========================================================")
     print("ALL TESTS PASSED! 100% SYNCHRONOUS DOMAIN ARCHITECTURE")
     print("========================================================")

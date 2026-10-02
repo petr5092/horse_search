@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.users.router import router as router_users
+from app.projects.router import router as router_projects
 
 # Initialize tables via pure raw SQL DDL
 init_db()
@@ -24,6 +25,7 @@ app.add_middleware(
 
 # Routers by objects
 app.include_router(router_users)
+app.include_router(router_projects)
 
 
 @app.get("/", tags=["Система"])
