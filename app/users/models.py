@@ -1,6 +1,7 @@
 import enum
-from typing import Optional
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum
+from app.database import Base
 
 
 class UserRole(str, enum.Enum):
@@ -32,3 +33,18 @@ ROLE_DESCRIPTIONS = {
         "restriction": "Не меняет сырые файлы",
     },
 }
+
+
+class Users(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.ANNOTATOR, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<Users id={self.id} email='{self.email}' role='{self.role}'>"

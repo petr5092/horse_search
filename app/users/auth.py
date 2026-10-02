@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any
+from typing import Optional
 import bcrypt
 import jwt
 from pydantic import EmailStr
 from app.config import settings
 from app.users.dao import UserDAO
+from app.users.models import Users
 
 
 def get_password_hash(password: str) -> str:
@@ -20,11 +21,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
 
-def authenticate_user(email: EmailStr, password: str) -> Optional[Dict[str, Any]]:
+def authenticate_user(email: EmailStr, password: str) -> Optional[Users]:
     user = UserDAO.find_one_or_none(email=email.lower().strip())
     if not user:
         return None
-    if not verify_password(password, user["hashed_password"]):
+    if not verify_password(password, user.hashed_password):
         return None
     return user
 
