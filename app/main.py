@@ -9,11 +9,9 @@ from app.users.router import router as router_users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Асинхронное создание таблиц БД при запуске
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Закрытие пула соединений
     await engine.dispose()
 
 
