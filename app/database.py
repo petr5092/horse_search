@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
-# Async engine for SQLAlchemy ORM (как в petr5092/FastAPI)
+
 connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 
 engine = create_async_engine(

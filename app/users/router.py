@@ -51,7 +51,7 @@ def build_user_out(user: Users) -> SUserOut:
 @router.post("/register", status_code=status.HTTP_201_CREATED, summary="Регистрация пользователя")
 async def register_user(user_data: SUserRegister) -> SUserOut:
     """
-    Асинхронная регистрация пользователя через SQLAlchemy ORM (по аналогии с petr5092/FastAPI):
+    Асинхронная регистрация пользователя через SQLAlchemy ORM (по аналогии с ):
     - Проверка наличия пользователя через await UserDAO.find_one_or_none;
     - Первый пользователь системы становится Администратором (admin);
     - Последующие пользователи получают роль Аннотатора (annotator);
@@ -81,7 +81,7 @@ async def login_user(response: Response, user_data: SUserAuth):
     Асинхронная аутентификация пользователя:
     - Проверка пароля через await authenticate_user;
     - Создание access_token JWT;
-    - Установка токена в Cookie (как в petr5092/FastAPI) и возврат в теле ответа.
+    - Установка токена в Cookie (как в ) и возврат в теле ответа.
     """
     user = await authenticate_user(user_data.email, user_data.password)
     if not user:

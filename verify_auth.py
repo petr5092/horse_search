@@ -112,7 +112,7 @@ def run_tests():
             assert len(all_users) == 2
             print(f"[OK] /auth/all retrieved {len(all_users)} users")
 
-    # Direct asynchronous DAO test (as in petr5092/FastAPI)
+    # Direct asynchronous DAO test (as in )
     async def async_dao_test():
         print("\n--- 11. Testing Asynchronous DAO operations (BaseDAO & UserDAO) ---")
         admin = await UserDAO.find_by_id(1)

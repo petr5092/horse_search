@@ -20,7 +20,7 @@ class BaseDAO:
             result = await session.execute(query)
             return result.scalar_one_or_none()
 
-    # Псевдоним как в petr5092/FastAPI
+
     find_by_fil = find_one_or_none
 
     @classmethod
@@ -30,7 +30,7 @@ class BaseDAO:
             result = await session.execute(query)
             return result.scalars().all()
 
-    # Псевдоним как в petr5092/FastAPI
+
     get_all = find_all
 
     @classmethod

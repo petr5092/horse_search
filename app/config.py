@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Horse Dataset Studio API"
 
-    # PostgreSQL configuration (как в репозитории petr5092/FastAPI)
+    # PostgreSQL configuration (как в репозитории )
     POSTGRES_HOST: Optional[str] = None
     POSTGRES_PORT: Optional[int] = 5432
     POSTGRES_USER: Optional[str] = None
