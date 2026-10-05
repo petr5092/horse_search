@@ -1,55 +1,68 @@
 from typing import Any, List, Optional
-from sqlalchemy import select, func
-from app.database import session_maker
+from sqlalchemy import select, insert, update, delete, func
+from app.database import async_session_maker
 
 
 class BaseDAO:
     model = None
 
     @classmethod
-    def find_by_id(cls, model_id: int):
-        with session_maker() as session:
+    async def find_by_id(cls, model_id: int):
+        async with async_session_maker() as session:
             query = select(cls.model).filter_by(id=model_id)
-            result = session.execute(query)
+            result = await session.execute(query)
             return result.scalar_one_or_none()
 
     @classmethod
-    def find_one_or_none(cls, **filter_by):
-        with session_maker() as session:
+    async def find_one_or_none(cls, **filter_by):
+        async with async_session_maker() as session:
             query = select(cls.model).filter_by(**filter_by)
-            result = session.execute(query)
+            result = await session.execute(query)
             return result.scalar_one_or_none()
 
+    # Псевдоним как в petr5092/FastAPI
+    find_by_fil = find_one_or_none
+
     @classmethod
-    def find_all(cls, **filter_by):
-        with session_maker() as session:
+    async def find_all(cls, **filter_by):
+        async with async_session_maker() as session:
             query = select(cls.model).filter_by(**filter_by)
-            result = session.execute(query)
+            result = await session.execute(query)
             return result.scalars().all()
 
+    # Псевдоним как в petr5092/FastAPI
+    get_all = find_all
+
     @classmethod
-    def add(cls, **data):
-        with session_maker() as session:
+    async def add(cls, **data):
+        async with async_session_maker() as session:
             instance = cls.model(**data)
             session.add(instance)
-            session.commit()
-            session.refresh(instance)
+            await session.commit()
+            await session.refresh(instance)
             return instance
 
     @classmethod
-    def update_by_id(cls, model_id: int, **data):
-        with session_maker() as session:
-            instance = session.get(cls.model, model_id)
+    async def update_by_id(cls, model_id: int, **data):
+        async with async_session_maker() as session:
+            instance = await session.get(cls.model, model_id)
             if instance:
                 for key, value in data.items():
                     setattr(instance, key, value)
-                session.commit()
-                session.refresh(instance)
+                await session.commit()
+                await session.refresh(instance)
             return instance
 
     @classmethod
-    def count(cls, **filter_by) -> int:
-        with session_maker() as session:
+    async def count(cls, **filter_by) -> int:
+        async with async_session_maker() as session:
             query = select(func.count(cls.model.id)).filter_by(**filter_by)
-            result = session.execute(query)
+            result = await session.execute(query)
             return result.scalar() or 0
+
+    @classmethod
+    async def delete_by_id(cls, model_id: int):
+        async with async_session_maker() as session:
+            query = delete(cls.model).filter_by(id=model_id)
+            await session.execute(query)
+            await session.commit()

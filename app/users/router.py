@@ -49,23 +49,23 @@ def build_user_out(user: Users) -> SUserOut:
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, summary="Регистрация пользователя")
-def register_user(user_data: SUserRegister) -> SUserOut:
+async def register_user(user_data: SUserRegister) -> SUserOut:
     """
-    Синхронная регистрация пользователя через SQLAlchemy ORM:
-    - Проверка наличия пользователя через UserDAO.find_one_or_none;
+    Асинхронная регистрация пользователя через SQLAlchemy ORM (по аналогии с petr5092/FastAPI):
+    - Проверка наличия пользователя через await UserDAO.find_one_or_none;
     - Первый пользователь системы становится Администратором (admin);
     - Последующие пользователи получают роль Аннотатора (annotator);
-    - Хеширование пароля и сохранение через UserDAO.add.
+    - Хеширование пароля и асинхронное сохранение через await UserDAO.add.
     """
-    existing_user = UserDAO.find_one_or_none(email=user_data.email.lower().strip())
+    existing_user = await UserDAO.find_one_or_none(email=user_data.email.lower().strip())
     if existing_user:
         raise UserAlreadyExistsException
 
-    total_users = UserDAO.count()
+    total_users = await UserDAO.count()
     assigned_role = UserRole.ADMIN if total_users == 0 else UserRole.ANNOTATOR
 
     hashed_password = get_password_hash(user_data.password)
-    new_user = UserDAO.add(
+    new_user = await UserDAO.add(
         email=user_data.email.lower().strip(),
         full_name=user_data.full_name.strip(),
         hashed_password=hashed_password,
@@ -76,14 +76,14 @@ def register_user(user_data: SUserRegister) -> SUserOut:
 
 
 @router.post("/login", summary="Авторизация пользователя")
-def login_user(response: Response, user_data: SUserAuth):
+async def login_user(response: Response, user_data: SUserAuth):
     """
-    Аутентификация пользователя:
-    - Проверка пароля через authenticate_user;
+    Асинхронная аутентификация пользователя:
+    - Проверка пароля через await authenticate_user;
     - Создание access_token JWT;
     - Установка токена в Cookie (как в petr5092/FastAPI) и возврат в теле ответа.
     """
-    user = authenticate_user(user_data.email, user_data.password)
+    user = await authenticate_user(user_data.email, user_data.password)
     if not user:
         raise IncorrectEmailOrPasswordException
 
@@ -99,20 +99,20 @@ def login_user(response: Response, user_data: SUserAuth):
 
 
 @router.post("/logout", summary="Выход из системы")
-def logout_user(response: Response):
+async def logout_user(response: Response):
     """Удаление авторизационной куки."""
     response.delete_cookie("access_token")
     return {"status": "ok", "message": "Успешный выход из системы"}
 
 
 @router.get("/me", response_model=SUserOut, summary="Профиль текущего пользователя")
-def get_me(current_user: Users = Depends(get_current_user)) -> SUserOut:
+async def get_me(current_user: Users = Depends(get_current_user)) -> SUserOut:
     """Получение профиля авторизованного пользователя и его регламентных прав."""
     return build_user_out(current_user)
 
 
 @router.get("/roles", response_model=List[SRoleInfo], summary="Справочник ролей системы (Таблица 3.1)")
-def get_roles():
+async def get_roles():
     """Справочник ролей ВИМ: права и системные ограничения."""
     return [
         SRoleInfo(
@@ -126,14 +126,14 @@ def get_roles():
 
 
 @router.get("/all", response_model=List[SUserOut], summary="Все сотрудники (только Администратор)")
-def get_all_users(current_user: Users = Depends(get_current_admin_user)) -> List[SUserOut]:
+async def get_all_users(current_user: Users = Depends(get_current_admin_user)) -> List[SUserOut]:
     """Список всех пользователей системы. Доступно только Администратору."""
-    users = UserDAO.find_all()
+    users = await UserDAO.find_all()
     return [build_user_out(u) for u in users]
 
 
 @router.patch("/{user_id}/role", response_model=SUserOut, summary="Назначение роли (только Администратор)")
-def update_user_role(
+async def update_user_role(
     user_id: int,
     role_data: SUserRoleUpdate,
     current_user: Users = Depends(get_current_admin_user)
@@ -143,14 +143,14 @@ def update_user_role(
     - Доступно строго роли Администратор;
     - Защита от снятия роли с последнего администратора в системе.
     """
-    target_user = UserDAO.find_by_id(user_id)
+    target_user = await UserDAO.find_by_id(user_id)
     if not target_user:
         raise UserNotFoundException
 
     if target_user.id == current_user.id and role_data.new_role != UserRole.ADMIN:
-        admin_count = UserDAO.count(role=UserRole.ADMIN)
+        admin_count = await UserDAO.count(role=UserRole.ADMIN)
         if admin_count <= 1:
             raise CannotDemoteLastAdminException
 
-    updated_user = UserDAO.update_by_id(user_id, role=role_data.new_role)
+    updated_user = await UserDAO.update_by_id(user_id, role=role_data.new_role)
     return build_user_out(updated_user)

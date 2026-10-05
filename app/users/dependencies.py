@@ -17,6 +17,8 @@ def get_token(request: Request) -> str:
     """Extracts token from cookies or Authorization header."""
     token = request.cookies.get("access_token")
     if not token:
+        token = request.cookies.get("booking_access_token")
+    if not token:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
@@ -26,8 +28,8 @@ def get_token(request: Request) -> str:
     return token
 
 
-def get_current_user(token: str = Depends(get_token)) -> Users:
-    """Decodes JWT and retrieves the current user synchronously via ORM."""
+async def get_current_user(token: str = Depends(get_token)) -> Users:
+    """Decodes JWT and retrieves the current user asynchronously via ORM."""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except jwt.ExpiredSignatureError:
@@ -39,14 +41,14 @@ def get_current_user(token: str = Depends(get_token)) -> Users:
     if not user_id:
         raise UserNotFoundException
 
-    user = UserDAO.find_by_id(int(user_id))
+    user = await UserDAO.find_by_id(int(user_id))
     if not user or not user.is_active:
         raise UserNotFoundException
 
     return user
 
 
-def get_current_admin_user(current_user: Users = Depends(get_current_user)) -> Users:
+async def get_current_admin_user(current_user: Users = Depends(get_current_user)) -> Users:
     """Ensures current user is an Administrator."""
     role_val = current_user.role.value if isinstance(current_user.role, UserRole) else current_user.role
     if role_val != UserRole.ADMIN.value and current_user.role != UserRole.ADMIN:
@@ -58,7 +60,7 @@ def require_roles(allowed_roles: List[UserRole]):
     """Checks user role against allowed roles according to Table 3.1."""
     allowed_values = [r.value if isinstance(r, UserRole) else r for r in allowed_roles]
 
-    def role_checker(current_user: Users = Depends(get_current_user)) -> Users:
+    async def role_checker(current_user: Users = Depends(get_current_user)) -> Users:
         role_val = current_user.role.value if isinstance(current_user.role, UserRole) else current_user.role
         if role_val not in allowed_values and current_user.role not in allowed_roles:
             role_enum = UserRole(role_val) if role_val in [r.value for r in UserRole] else UserRole.ANNOTATOR
