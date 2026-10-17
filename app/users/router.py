@@ -52,7 +52,7 @@ def build_user_out(user: Users) -> SUserOut:
 async def register_user(user_data: SUserRegister) -> SUserOut:
     """
     Асинхронная регистрация пользователя через SQLAlchemy ORM (по аналогии с ):
-    - Проверка наличия пользователя через await UserDAO.find_one_or_none;
+    - Проверка наличия пользователя;
     - Первый пользователь системы становится Администратором (admin);
     - Последующие пользователи получают роль Аннотатора (annotator);
     - Хеширование пароля и асинхронное сохранение через await UserDAO.add.
@@ -79,8 +79,7 @@ async def register_user(user_data: SUserRegister) -> SUserOut:
 async def login_user(response: Response, user_data: SUserAuth):
     """
     Асинхронная аутентификация пользователя:
-    - Проверка пароля через await authenticate_user;
-    - Создание access_token JWT;
+    - Проверка пароля через await authenticate_user;;
     - Установка токена в Cookie (как в ) и возврат в теле ответа.
     """
     user = await authenticate_user(user_data.email, user_data.password)
@@ -111,7 +110,7 @@ async def get_me(current_user: Users = Depends(get_current_user)) -> SUserOut:
     return build_user_out(current_user)
 
 
-@router.get("/roles", response_model=List[SRoleInfo], summary="Справочник ролей системы (Таблица 3.1)")
+@router.get("/roles", response_model=List[SRoleInfo], summary="Справочник ролей системы)")
 async def get_roles():
     """Справочник ролей ВИМ: права и системные ограничения."""
     return [
