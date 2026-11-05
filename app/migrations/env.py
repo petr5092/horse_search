@@ -11,6 +11,7 @@ from app.config import settings
 from app.database import Base
 # Импортируем все модели для autogenerate миграций
 from app.users.models import Users
+from app.files.models import StoredFile
 
 # this is the Alembic Config object
 config = context.config

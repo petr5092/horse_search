@@ -1,0 +1,28 @@
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: horse-local
+      MINIO_ROOT_PASSWORD: horse-local-secret-change-me
+    ports:
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
+    volumes:
+      - minio-data:/data
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        mc alias set local http://minio:9000 horse-local horse-local-secret-change-me &&
+        mc ready local &&
+        mc mb --ignore-existing local/horse-originals &&
+        mc anonymous set none local/horse-originals &&
+        echo '{"Rules":[{"ID":"expire-staging","Status":"Enabled","Filter":{"Prefix":"staging/"},"Expiration":{"Days":1}}]}' | mc ilm rule import local/horse-originals
+volumes:
+  minio-data:

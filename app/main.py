@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.users.models import Users
+from app.files.models import StoredFile
+from app.files.router import router as router_files
 from app.users.router import router as router_users
 
 
@@ -33,6 +35,7 @@ app.add_middleware(
 
 # Подключение роутеров
 app.include_router(router_users)
+app.include_router(router_files)
 
 
 @app.get("/", tags=["Система"])
