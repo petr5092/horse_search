@@ -1,0 +1,36 @@
+{
+  "request_id": "00000000-0000-4000-8000-000000000101",
+  "title": "Synthetic annotation handoff v0.1",
+  "assignee_id": 3,
+  "reviewer_id": 4,
+  "label_schema": {
+    "id": "00000000-0000-4000-8000-000000000005",
+    "version": 1,
+    "labels": [
+      {
+        "id": "horse",
+        "name": "Лошадь"
+      }
+    ]
+  },
+  "items": [
+    {
+      "image_version_id": "00000000-0000-4000-8000-000000000011",
+      "sha256": "b484f69e12002e41511289c6a40f5060ffa750fb832e9f55a12cbba6c861b830",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "image_version_id": "00000000-0000-4000-8000-000000000012",
+      "sha256": "5ac1f5da1b6b37bf52d76e619d61a64732764fd5f4f75ec011baa39d99804935",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "image_version_id": "00000000-0000-4000-8000-000000000013",
+      "sha256": "278ebf1674c968d28e3b7e1bf0cfab4ee022306aaf48440a704eed28c0c8d3b9",
+      "width": 640,
+      "height": 640
+    }
+  ]
+}

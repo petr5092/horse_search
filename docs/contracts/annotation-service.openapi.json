@@ -1,0 +1,4415 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Horse Dataset Annotation Service",
+    "version": "0.1.0",
+    "description": "Draft Go service contract. Internal HTTP API behind FastAPI. Owns annotation tasks, revisions, review and accepted snapshots. Business rules and delivery criteria: ../go-annotation-service-spec.md. All project mutations require idempotent request_id; no application implementation is included."
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "servers": [
+    {
+      "url": "http://annotation-go:8080",
+      "description": "Example internal Compose address"
+    }
+  ],
+  "security": [
+    {
+      "ServiceToken": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Tasks"
+    },
+    {
+      "name": "Annotations"
+    },
+    {
+      "name": "Reviews"
+    },
+    {
+      "name": "Snapshots"
+    },
+    {
+      "name": "Operations"
+    }
+  ],
+  "paths": {
+    "/v1/projects/{project_id}/tasks": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        }
+      ],
+      "get": {
+        "operationId": "listTasks",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "List tasks visible to the actor",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPage"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "items": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000002",
+                          "project_id": "00000000-0000-4000-8000-000000000001",
+                          "title": "Пакет 1",
+                          "assignee_id": 3,
+                          "reviewer_id": 4,
+                          "state": "in_progress",
+                          "task_revision": 1,
+                          "item_count": 1,
+                          "current_submission_id": null,
+                          "created_at": "2026-11-08T12:00:00Z",
+                          "updated_at": "2026-11-08T12:00:00Z"
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Create an assigned task from trusted image contexts",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "title": "Пакет 1",
+                      "assignee_id": 3,
+                      "reviewer_id": 4,
+                      "state": "in_progress",
+                      "task_revision": 1,
+                      "item_count": 1,
+                      "current_submission_id": null,
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "updated_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000101",
+                    "title": "Пакет 1",
+                    "assignee_id": 3,
+                    "reviewer_id": 4,
+                    "label_schema": {
+                      "id": "00000000-0000-4000-8000-000000000005",
+                      "version": 1,
+                      "labels": [
+                        {
+                          "id": "horse",
+                          "name": "Лошадь"
+                        }
+                      ]
+                    },
+                    "items": [
+                      {
+                        "image_version_id": "00000000-0000-4000-8000-000000000004",
+                        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "width": 640,
+                        "height": 640
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Admin/manager only. The gateway validates all external IDs and image readiness. The task is created in in_progress state with task_revision=1."
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "get": {
+        "operationId": "getTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Read task state and assignments",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "title": "Пакет 1",
+                      "assignee_id": 3,
+                      "reviewer_id": 4,
+                      "state": "in_progress",
+                      "task_revision": 1,
+                      "item_count": 1,
+                      "current_submission_id": null,
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "updated_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/assignment": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "patch": {
+        "operationId": "assignTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Change assignments with an expected task revision",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                },
+                "examples": {
+                  "reassigned": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "title": "Пакет 1",
+                      "assignee_id": 3,
+                      "reviewer_id": 5,
+                      "state": "in_progress",
+                      "task_revision": 2,
+                      "item_count": 1,
+                      "current_submission_id": null,
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "updated_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000106",
+                    "expected_task_revision": 1,
+                    "assignee_id": 3,
+                    "reviewer_id": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Admin/manager only. In submitted only reviewer_id may change. In accepted no assignment changes are allowed. Authors of this task cannot be appointed reviewer."
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/items": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "get": {
+        "operationId": "listTaskItems",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "List task images in immutable position order",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskItemPage"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "items": [
+                        {
+                          "task_item_id": "00000000-0000-4000-8000-000000000003",
+                          "image_version_id": "00000000-0000-4000-8000-000000000004",
+                          "position": 1,
+                          "current_revision": 1,
+                          "result": "has_objects"
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    },
+    "/v1/projects/{project_id}/task-items/{task_item_id}/context": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskItemId"
+        }
+      ],
+      "get": {
+        "operationId": "getTaskItemContext",
+        "tags": [
+          "Annotations"
+        ],
+        "summary": "Read authorized editor context without an image URL",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskItemContext"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "task_id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "image": {
+                        "image_version_id": "00000000-0000-4000-8000-000000000004",
+                        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "width": 640,
+                        "height": 640
+                      },
+                      "label_schema": {
+                        "id": "00000000-0000-4000-8000-000000000005",
+                        "version": 1,
+                        "labels": [
+                          {
+                            "id": "horse",
+                            "name": "Лошадь"
+                          }
+                        ]
+                      },
+                      "validation_policy": {
+                        "version": 1,
+                        "min_box_side_warning": 4,
+                        "duplicate_iou_warning": 0.95
+                      },
+                      "task_state": "in_progress",
+                      "task_revision": 1,
+                      "can_edit": true,
+                      "can_review": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/task-items/{task_item_id}/annotations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskItemId"
+        }
+      ],
+      "get": {
+        "operationId": "getAnnotations",
+        "tags": [
+          "Annotations"
+        ],
+        "summary": "Read the current annotation document",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationDocument"
+                },
+                "examples": {
+                  "new_document": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 0,
+                      "result": "unmarked",
+                      "boxes": [],
+                      "issues": [],
+                      "created_by": null,
+                      "created_at": null
+                    }
+                  },
+                  "saved_document": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 1,
+                      "result": "has_objects",
+                      "boxes": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000006",
+                          "label_id": "horse",
+                          "xmin": 100.5,
+                          "ymin": 80,
+                          "xmax": 310,
+                          "ymax": 420,
+                          "occluded": false,
+                          "truncated": false
+                        }
+                      ],
+                      "issues": [],
+                      "created_by": 3,
+                      "created_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAnnotations",
+        "tags": [
+          "Annotations"
+        ],
+        "summary": "Save a complete annotation document as a new revision",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationDocument"
+                },
+                "examples": {
+                  "first_save": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 1,
+                      "result": "has_objects",
+                      "boxes": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000006",
+                          "label_id": "horse",
+                          "xmin": 100.5,
+                          "ymin": 80,
+                          "xmax": 310,
+                          "ymax": 420,
+                          "occluded": false,
+                          "truncated": false
+                        }
+                      ],
+                      "issues": [],
+                      "created_by": 3,
+                      "created_at": "2026-11-08T12:00:00Z"
+                    }
+                  },
+                  "negative": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 2,
+                      "result": "negative",
+                      "boxes": [],
+                      "issues": [],
+                      "created_by": 3,
+                      "created_at": "2026-11-08T12:00:00Z"
+                    }
+                  },
+                  "reset": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 2,
+                      "result": "unmarked",
+                      "boxes": [],
+                      "issues": [],
+                      "created_by": 3,
+                      "created_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAnnotationsRequest"
+              },
+              "examples": {
+                "first_save": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000102",
+                    "expected_revision": 0,
+                    "result": "has_objects",
+                    "boxes": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000006",
+                        "label_id": "horse",
+                        "xmin": 100.5,
+                        "ymin": 80,
+                        "xmax": 310,
+                        "ymax": 420,
+                        "occluded": false,
+                        "truncated": false
+                      }
+                    ]
+                  }
+                },
+                "negative": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000107",
+                    "expected_revision": 1,
+                    "result": "negative",
+                    "boxes": []
+                  }
+                },
+                "reset": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000108",
+                    "expected_revision": 1,
+                    "result": "unmarked",
+                    "boxes": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Assigned annotator only, in_progress/returned. Compare expected_revision atomically. Reuse the same request_id and exact logical body after an uncertain network result. Saving, audit and idempotency record commit together."
+      }
+    },
+    "/v1/projects/{project_id}/task-items/{task_item_id}/annotations/revisions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskItemId"
+        }
+      ],
+      "get": {
+        "operationId": "listAnnotationRevisions",
+        "tags": [
+          "Annotations"
+        ],
+        "summary": "List saved revisions newest first",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionPage"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "items": [
+                        {
+                          "revision": 1,
+                          "result": "has_objects",
+                          "box_count": 1,
+                          "issue_count": 0,
+                          "created_by": 3,
+                          "created_at": "2026-11-08T12:00:00Z"
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    },
+    "/v1/projects/{project_id}/task-items/{task_item_id}/annotations/revisions/{revision}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskItemId"
+        },
+        {
+          "$ref": "#/components/parameters/Revision"
+        }
+      ],
+      "get": {
+        "operationId": "getAnnotationRevision",
+        "tags": [
+          "Annotations"
+        ],
+        "summary": "Read an immutable saved revision",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationDocument"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "task_item_id": "00000000-0000-4000-8000-000000000003",
+                      "image_version_id": "00000000-0000-4000-8000-000000000004",
+                      "revision": 1,
+                      "result": "has_objects",
+                      "boxes": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000006",
+                          "label_id": "horse",
+                          "xmin": 100.5,
+                          "ymin": 80,
+                          "xmax": 310,
+                          "ymax": 420,
+                          "occluded": false,
+                          "truncated": false
+                        }
+                      ],
+                      "issues": [],
+                      "created_by": 3,
+                      "created_at": "2026-11-08T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Revision must be positive. Revision zero is virtual initial state and is not a saved revision."
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/submit": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "post": {
+        "operationId": "submitTask",
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Freeze exact current revisions and submit the task for review",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000007",
+                      "task_id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "number": 1,
+                      "state": "submitted",
+                      "submitted_by": 3,
+                      "contributor_ids": [
+                        3
+                      ],
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "task_revision": 2,
+                      "items": [
+                        {
+                          "task_item_id": "00000000-0000-4000-8000-000000000003",
+                          "annotation_revision": 1
+                        }
+                      ],
+                      "review": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000103",
+                    "expected_task_revision": 1,
+                    "items": [
+                      {
+                        "task_item_id": "00000000-0000-4000-8000-000000000003",
+                        "annotation_revision": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Assigned annotator only. The item list must exactly match task membership and current revisions; all items must be marked. Creates an immutable pin set and advances task_revision in one transaction."
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/submissions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "get": {
+        "operationId": "listSubmissions",
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "List submissions newest first",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmissionPage"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "items": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000007",
+                          "task_id": "00000000-0000-4000-8000-000000000002",
+                          "project_id": "00000000-0000-4000-8000-000000000001",
+                          "number": 1,
+                          "state": "submitted",
+                          "submitted_by": 3,
+                          "contributor_ids": [
+                            3
+                          ],
+                          "created_at": "2026-11-08T12:00:00Z",
+                          "task_revision": 2
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/submissions/{submission_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        },
+        {
+          "$ref": "#/components/parameters/SubmissionId"
+        }
+      ],
+      "get": {
+        "operationId": "getSubmission",
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Read pinned revisions and the review decision",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submission"
+                },
+                "examples": {
+                  "submitted": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000007",
+                      "task_id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "number": 1,
+                      "state": "submitted",
+                      "submitted_by": 3,
+                      "contributor_ids": [
+                        3
+                      ],
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "task_revision": 2,
+                      "items": [
+                        {
+                          "task_item_id": "00000000-0000-4000-8000-000000000003",
+                          "annotation_revision": 1
+                        }
+                      ],
+                      "review": null
+                    }
+                  },
+                  "accepted": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000007",
+                      "task_id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "number": 1,
+                      "state": "accepted",
+                      "submitted_by": 3,
+                      "contributor_ids": [
+                        3
+                      ],
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "task_revision": 2,
+                      "items": [
+                        {
+                          "task_item_id": "00000000-0000-4000-8000-000000000003",
+                          "annotation_revision": 1
+                        }
+                      ],
+                      "review": {
+                        "id": "00000000-0000-4000-8000-000000000008",
+                        "task_id": "00000000-0000-4000-8000-000000000002",
+                        "project_id": "00000000-0000-4000-8000-000000000001",
+                        "submission_id": "00000000-0000-4000-8000-000000000007",
+                        "reviewer_id": 4,
+                        "decision": "accept",
+                        "warnings_acknowledged": true,
+                        "comments": [],
+                        "created_at": "2026-11-08T12:00:00Z",
+                        "task_revision": 3
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/tasks/{task_id}/reviews": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/TaskId"
+        }
+      ],
+      "post": {
+        "operationId": "reviewTask",
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Accept or return the current submission",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Review"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000008",
+                      "task_id": "00000000-0000-4000-8000-000000000002",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "submission_id": "00000000-0000-4000-8000-000000000007",
+                      "reviewer_id": 4,
+                      "decision": "accept",
+                      "warnings_acknowledged": true,
+                      "comments": [],
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "task_revision": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              },
+              "examples": {
+                "accept": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000104",
+                    "expected_task_revision": 2,
+                    "submission_id": "00000000-0000-4000-8000-000000000007",
+                    "decision": "accept",
+                    "warnings_acknowledged": true,
+                    "comments": []
+                  }
+                },
+                "return": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000109",
+                    "expected_task_revision": 2,
+                    "submission_id": "00000000-0000-4000-8000-000000000007",
+                    "decision": "return",
+                    "warnings_acknowledged": false,
+                    "comments": [
+                      {
+                        "task_item_id": "00000000-0000-4000-8000-000000000003",
+                        "box_id": "00000000-0000-4000-8000-000000000006",
+                        "rule_code": "bbox_visible_part",
+                        "message": "Уточнить рамку по видимой части животного."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Assigned reviewer only, submitted state. The reviewer must not be the assignee or any revision author. Return requires comments. Acceptance with warnings requires warnings_acknowledged=true. One decision per submission."
+      }
+    },
+    "/v1/projects/{project_id}/snapshots": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        }
+      ],
+      "post": {
+        "operationId": "createSnapshot",
+        "tags": [
+          "Snapshots"
+        ],
+        "summary": "Create an immutable snapshot of accepted submissions",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotMetadata"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000009",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "format_version": 1,
+                      "created_by": 2,
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "item_count": 1,
+                      "box_count": 1,
+                      "sha256": "245d418c52dd0288b773dbf8096c5625fd417a0dbb00e656694965544f2ce156"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSnapshotRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "request_id": "00000000-0000-4000-8000-000000000105",
+                    "submission_ids": [
+                      "00000000-0000-4000-8000-000000000007"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Admin/manager only. Reject nonaccepted or cross-project submissions and repeated image_version_id. Snapshot limits: 10000 images, 100000 boxes and 64 MiB serialized content; exceeding a content limit is validation_error (422). Persist exact serialized content bytes and SHA-256."
+      }
+    },
+    "/v1/projects/{project_id}/snapshots/{snapshot_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/SnapshotId"
+        }
+      ],
+      "get": {
+        "operationId": "getSnapshot",
+        "tags": [
+          "Snapshots"
+        ],
+        "summary": "Read snapshot metadata",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotMetadata"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000009",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "format_version": 1,
+                      "created_by": 2,
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "item_count": 1,
+                      "box_count": 1,
+                      "sha256": "245d418c52dd0288b773dbf8096c5625fd417a0dbb00e656694965544f2ce156"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Admin/manager only."
+      }
+    },
+    "/v1/projects/{project_id}/snapshots/{snapshot_id}/content": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProjectId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorId"
+        },
+        {
+          "$ref": "#/components/parameters/ActorRole"
+        },
+        {
+          "$ref": "#/components/parameters/TraceId"
+        },
+        {
+          "$ref": "#/components/parameters/SnapshotId"
+        }
+      ],
+      "get": {
+        "operationId": "getSnapshotContent",
+        "tags": [
+          "Snapshots"
+        ],
+        "summary": "Read exact persisted snapshot JSON bytes",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-Content-SHA256": {
+                "description": "SHA-256 of exact response bytes",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "example": "245d418c52dd0288b773dbf8096c5625fd417a0dbb00e656694965544f2ce156"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotContent"
+                },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "format_version": 1,
+                      "snapshot_id": "00000000-0000-4000-8000-000000000009",
+                      "project_id": "00000000-0000-4000-8000-000000000001",
+                      "created_at": "2026-11-08T12:00:00Z",
+                      "items": [
+                        {
+                          "task_id": "00000000-0000-4000-8000-000000000002",
+                          "task_item_id": "00000000-0000-4000-8000-000000000003",
+                          "submission_id": "00000000-0000-4000-8000-000000000007",
+                          "review_id": "00000000-0000-4000-8000-000000000008",
+                          "image": {
+                            "image_version_id": "00000000-0000-4000-8000-000000000004",
+                            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                            "width": 640,
+                            "height": 640
+                          },
+                          "label_schema": {
+                            "id": "00000000-0000-4000-8000-000000000005",
+                            "version": 1,
+                            "labels": [
+                              {
+                                "id": "horse",
+                                "name": "Лошадь"
+                              }
+                            ]
+                          },
+                          "annotation_revision": 1,
+                          "result": "has_objects",
+                          "boxes": [
+                            {
+                              "id": "00000000-0000-4000-8000-000000000006",
+                              "label_id": "horse",
+                              "xmin": 100.5,
+                              "ymin": 80,
+                              "xmax": 310,
+                              "ymax": 420,
+                              "occluded": false,
+                              "truncated": false
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "description": "Admin/manager only. Do not reserialize stored content. The response hash is SHA-256 over the returned UTF-8 bytes. The example metadata hash uses compact UTF-8 JSON, with the example property order and no trailing newline."
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "health",
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Process liveness",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                },
+                "examples": {
+                  "status": {
+                    "value": {
+                      "status": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readiness",
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Database and schema readiness",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Trace ID for this HTTP attempt",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                },
+                "examples": {
+                  "status": {
+                    "value": {
+                      "status": "ready"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque service credential known to FastAPI and Go; not a browser JWT."
+      }
+    },
+    "parameters": {
+      "ProjectId": {
+        "name": "project_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "TaskId": {
+        "name": "task_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "TaskItemId": {
+        "name": "task_item_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "SubmissionId": {
+        "name": "submission_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "SnapshotId": {
+        "name": "snapshot_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "Revision": {
+        "name": "revision",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "ActorId": {
+        "name": "X-Actor-ID",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "description": "Trusted actor resolved by the authenticated FastAPI gateway."
+      },
+      "ActorRole": {
+        "name": "X-Actor-Role",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "manager",
+            "annotator",
+            "reviewer"
+          ]
+        },
+        "description": "Effective project role from the trusted gateway."
+      },
+      "TraceId": {
+        "name": "X-Request-ID",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "description": "Trace ID. Generated by Go if absent; not the mutation idempotency key."
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      }
+    },
+    "schemas": {
+      "Label": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "examples": [
+          {
+            "id": "horse",
+            "name": "Лошадь"
+          }
+        ]
+      },
+      "LabelSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Label"
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "labels"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000005",
+            "version": 1,
+            "labels": [
+              {
+                "id": "horse",
+                "name": "Лошадь"
+              }
+            ]
+          }
+        ]
+      },
+      "ValidationPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "min_box_side_warning": {
+            "type": "number",
+            "const": 4
+          },
+          "duplicate_iou_warning": {
+            "type": "number",
+            "const": 0.95
+          }
+        },
+        "required": [
+          "version",
+          "min_box_side_warning",
+          "duplicate_iou_warning"
+        ],
+        "examples": [
+          {
+            "version": 1,
+            "min_box_side_warning": 4,
+            "duplicate_iou_warning": 0.95
+          }
+        ]
+      },
+      "ImageContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "image_version_id",
+          "sha256",
+          "width",
+          "height"
+        ],
+        "examples": [
+          {
+            "image_version_id": "00000000-0000-4000-8000-000000000004",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "width": 640,
+            "height": 640
+          }
+        ]
+      },
+      "Box": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "xmin": {
+            "type": "number",
+            "minimum": 0
+          },
+          "ymin": {
+            "type": "number",
+            "minimum": 0
+          },
+          "xmax": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "ymax": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "occluded": {
+            "type": "boolean"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label_id",
+          "xmin",
+          "ymin",
+          "xmax",
+          "ymax",
+          "occluded",
+          "truncated"
+        ],
+        "description": "Coordinates are in working-image pixels. The service additionally checks finite values, positive area, image bounds, allowed labels and unique box IDs.",
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000006",
+            "label_id": "horse",
+            "xmin": 100.5,
+            "ymin": 80,
+            "xmax": 310,
+            "ymax": 420,
+            "occluded": false,
+            "truncated": false
+          }
+        ]
+      },
+      "Issue": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "small_box",
+              "possible_duplicate"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "const": "warning"
+          },
+          "box_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "box_ids",
+          "message"
+        ],
+        "examples": [
+          {
+            "code": "small_box",
+            "severity": "warning",
+            "box_ids": [
+              "00000000-0000-4000-8000-000000000006"
+            ],
+            "message": "Box side is below 4 px"
+          }
+        ]
+      },
+      "AnnotationDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "unmarked",
+              "has_objects",
+              "negative"
+            ]
+          },
+          "boxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Box"
+            },
+            "minItems": 0,
+            "maxItems": 1000
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "minItems": 0
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "task_item_id",
+          "image_version_id",
+          "revision",
+          "result",
+          "boxes",
+          "issues",
+          "created_by",
+          "created_at"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "result": {
+                  "const": "has_objects"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            },
+            "then": {
+              "properties": {
+                "boxes": {
+                  "minItems": 1
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "boxes": {
+                  "maxItems": 0
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "revision": {
+                  "const": 0
+                }
+              },
+              "required": [
+                "revision"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "const": "unmarked"
+                },
+                "boxes": {
+                  "maxItems": 0
+                },
+                "issues": {
+                  "maxItems": 0
+                },
+                "created_by": {
+                  "type": "null"
+                },
+                "created_at": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "created_by": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "image_version_id": "00000000-0000-4000-8000-000000000004",
+            "revision": 1,
+            "result": "has_objects",
+            "boxes": [
+              {
+                "id": "00000000-0000-4000-8000-000000000006",
+                "label_id": "horse",
+                "xmin": 100.5,
+                "ymin": 80,
+                "xmax": 310,
+                "ymax": 420,
+                "occluded": false,
+                "truncated": false
+              }
+            ],
+            "issues": [],
+            "created_by": 3,
+            "created_at": "2026-11-08T12:00:00Z"
+          }
+        ]
+      },
+      "RevisionSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "unmarked",
+              "has_objects",
+              "negative"
+            ]
+          },
+          "box_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "issue_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "created_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "revision",
+          "result",
+          "box_count",
+          "issue_count",
+          "created_by",
+          "created_at"
+        ],
+        "examples": [
+          {
+            "revision": 1,
+            "result": "has_objects",
+            "box_count": 1,
+            "issue_count": 0,
+            "created_by": 3,
+            "created_at": "2026-11-08T12:00:00Z"
+          }
+        ]
+      },
+      "SaveAnnotationsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "unmarked",
+              "has_objects",
+              "negative"
+            ]
+          },
+          "boxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Box"
+            },
+            "minItems": 0,
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "request_id",
+          "expected_revision",
+          "result",
+          "boxes"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "result": {
+                  "const": "has_objects"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            },
+            "then": {
+              "properties": {
+                "boxes": {
+                  "minItems": 1
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "boxes": {
+                  "maxItems": 0
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000102",
+            "expected_revision": 0,
+            "result": "has_objects",
+            "boxes": [
+              {
+                "id": "00000000-0000-4000-8000-000000000006",
+                "label_id": "horse",
+                "xmin": 100.5,
+                "ymin": 80,
+                "xmax": 310,
+                "ymax": 420,
+                "occluded": false,
+                "truncated": false
+              }
+            ]
+          }
+        ]
+      },
+      "Task": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assignee_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reviewer_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "submitted",
+              "returned",
+              "accepted"
+            ]
+          },
+          "task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "item_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "current_submission_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "title",
+          "assignee_id",
+          "reviewer_id",
+          "state",
+          "task_revision",
+          "item_count",
+          "current_submission_id",
+          "created_at",
+          "updated_at"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000002",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "title": "Пакет 1",
+            "assignee_id": 3,
+            "reviewer_id": 4,
+            "state": "in_progress",
+            "task_revision": 1,
+            "item_count": 1,
+            "current_submission_id": null,
+            "created_at": "2026-11-08T12:00:00Z",
+            "updated_at": "2026-11-08T12:00:00Z"
+          }
+        ]
+      },
+      "CreateTaskRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "assignee_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reviewer_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "label_schema": {
+            "$ref": "#/components/schemas/LabelSchema"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageContext"
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "request_id",
+          "title",
+          "assignee_id",
+          "reviewer_id",
+          "label_schema",
+          "items"
+        ],
+        "description": "Trusted gateway request. The platform resolves image metadata and validates the assignee/reviewer. Image versions and label schema are immutable after creation. Task item IDs are generated by Go and obtained through the items endpoint.",
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000101",
+            "title": "Пакет 1",
+            "assignee_id": 3,
+            "reviewer_id": 4,
+            "label_schema": {
+              "id": "00000000-0000-4000-8000-000000000005",
+              "version": 1,
+              "labels": [
+                {
+                  "id": "horse",
+                  "name": "Лошадь"
+                }
+              ]
+            },
+            "items": [
+              {
+                "image_version_id": "00000000-0000-4000-8000-000000000004",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "width": 640,
+                "height": 640
+              }
+            ]
+          }
+        ]
+      },
+      "AssignmentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expected_task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "assignee_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "reviewer_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "request_id",
+          "expected_task_revision",
+          "assignee_id",
+          "reviewer_id"
+        ],
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000106",
+            "expected_task_revision": 1,
+            "assignee_id": 3,
+            "reviewer_id": 5
+          }
+        ]
+      },
+      "TaskItemSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "current_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "unmarked",
+              "has_objects",
+              "negative"
+            ]
+          }
+        },
+        "required": [
+          "task_item_id",
+          "image_version_id",
+          "position",
+          "current_revision",
+          "result"
+        ],
+        "examples": [
+          {
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "image_version_id": "00000000-0000-4000-8000-000000000004",
+            "position": 1,
+            "current_revision": 1,
+            "result": "has_objects"
+          }
+        ]
+      },
+      "TaskItemContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "image": {
+            "$ref": "#/components/schemas/ImageContext"
+          },
+          "label_schema": {
+            "$ref": "#/components/schemas/LabelSchema"
+          },
+          "validation_policy": {
+            "$ref": "#/components/schemas/ValidationPolicy"
+          },
+          "task_state": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "submitted",
+              "returned",
+              "accepted"
+            ]
+          },
+          "task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "can_edit": {
+            "type": "boolean"
+          },
+          "can_review": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "task_item_id",
+          "task_id",
+          "project_id",
+          "image",
+          "label_schema",
+          "validation_policy",
+          "task_state",
+          "task_revision",
+          "can_edit",
+          "can_review"
+        ],
+        "description": "Go response contains no S3 URL. The platform adds a fresh viewing URL and expiry for the browser after obtaining this authorized context.",
+        "examples": [
+          {
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "task_id": "00000000-0000-4000-8000-000000000002",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "image": {
+              "image_version_id": "00000000-0000-4000-8000-000000000004",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "width": 640,
+              "height": 640
+            },
+            "label_schema": {
+              "id": "00000000-0000-4000-8000-000000000005",
+              "version": 1,
+              "labels": [
+                {
+                  "id": "horse",
+                  "name": "Лошадь"
+                }
+              ]
+            },
+            "validation_policy": {
+              "version": 1,
+              "min_box_side_warning": 4,
+              "duplicate_iou_warning": 0.95
+            },
+            "task_state": "in_progress",
+            "task_revision": 1,
+            "can_edit": true,
+            "can_review": false
+          }
+        ]
+      },
+      "RevisionPin": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "annotation_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "task_item_id",
+          "annotation_revision"
+        ],
+        "examples": [
+          {
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "annotation_revision": 1
+          }
+        ]
+      },
+      "SubmitRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expected_task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionPin"
+            },
+            "minItems": 1,
+            "maxItems": 10000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "request_id",
+          "expected_task_revision",
+          "items"
+        ],
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000103",
+            "expected_task_revision": 1,
+            "items": [
+              {
+                "task_item_id": "00000000-0000-4000-8000-000000000003",
+                "annotation_revision": 1
+              }
+            ]
+          }
+        ]
+      },
+      "ReviewCommentInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "box_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "task_item_id",
+          "box_id",
+          "rule_code",
+          "message"
+        ],
+        "description": "Use null targets for a general task comment. A box target requires an item target and must belong to the pinned submission revision.",
+        "examples": [
+          {
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "box_id": "00000000-0000-4000-8000-000000000006",
+            "rule_code": "bbox_visible_part",
+            "message": "Уточнить рамку по видимой части животного."
+          }
+        ]
+      },
+      "ReviewComment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "box_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "task_item_id",
+          "box_id",
+          "rule_code",
+          "message"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "box_id": "00000000-0000-4000-8000-000000000006",
+            "rule_code": "bbox_visible_part",
+            "message": "Уточнить рамку по видимой части животного."
+          }
+        ]
+      },
+      "ReviewRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expected_task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "submission_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "return"
+            ]
+          },
+          "warnings_acknowledged": {
+            "type": "boolean"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewCommentInput"
+            },
+            "minItems": 0,
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "request_id",
+          "expected_task_revision",
+          "submission_id",
+          "decision",
+          "warnings_acknowledged",
+          "comments"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "decision": {
+                  "const": "return"
+                }
+              },
+              "required": [
+                "decision"
+              ]
+            },
+            "then": {
+              "properties": {
+                "comments": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000104",
+            "expected_task_revision": 2,
+            "submission_id": "00000000-0000-4000-8000-000000000007",
+            "decision": "accept",
+            "warnings_acknowledged": true,
+            "comments": []
+          }
+        ]
+      },
+      "Review": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submission_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reviewer_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "return"
+            ]
+          },
+          "warnings_acknowledged": {
+            "type": "boolean"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewComment"
+            },
+            "minItems": 0,
+            "maxItems": 1000
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "project_id",
+          "submission_id",
+          "reviewer_id",
+          "decision",
+          "warnings_acknowledged",
+          "comments",
+          "created_at",
+          "task_revision"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000008",
+            "task_id": "00000000-0000-4000-8000-000000000002",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "submission_id": "00000000-0000-4000-8000-000000000007",
+            "reviewer_id": 4,
+            "decision": "accept",
+            "warnings_acknowledged": true,
+            "comments": [],
+            "created_at": "2026-11-08T12:00:00Z",
+            "task_revision": 3
+          }
+        ]
+      },
+      "SubmissionSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "submitted",
+              "returned",
+              "accepted"
+            ]
+          },
+          "submitted_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "contributor_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "project_id",
+          "number",
+          "state",
+          "submitted_by",
+          "contributor_ids",
+          "created_at",
+          "task_revision"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000007",
+            "task_id": "00000000-0000-4000-8000-000000000002",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "number": 1,
+            "state": "submitted",
+            "submitted_by": 3,
+            "contributor_ids": [
+              3
+            ],
+            "created_at": "2026-11-08T12:00:00Z",
+            "task_revision": 2
+          }
+        ]
+      },
+      "Submission": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "submitted",
+              "returned",
+              "accepted"
+            ]
+          },
+          "submitted_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "contributor_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "task_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionPin"
+            },
+            "minItems": 1,
+            "maxItems": 10000,
+            "uniqueItems": true
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Review"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "project_id",
+          "number",
+          "state",
+          "submitted_by",
+          "contributor_ids",
+          "created_at",
+          "task_revision",
+          "items",
+          "review"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000007",
+            "task_id": "00000000-0000-4000-8000-000000000002",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "number": 1,
+            "state": "submitted",
+            "submitted_by": 3,
+            "contributor_ids": [
+              3
+            ],
+            "created_at": "2026-11-08T12:00:00Z",
+            "task_revision": 2,
+            "items": [
+              {
+                "task_item_id": "00000000-0000-4000-8000-000000000003",
+                "annotation_revision": 1
+              }
+            ],
+            "review": null
+          }
+        ]
+      },
+      "CreateSnapshotRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submission_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 10000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "request_id",
+          "submission_ids"
+        ],
+        "examples": [
+          {
+            "request_id": "00000000-0000-4000-8000-000000000105",
+            "submission_ids": [
+              "00000000-0000-4000-8000-000000000007"
+            ]
+          }
+        ]
+      },
+      "SnapshotItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "task_item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submission_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "review_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "image": {
+            "$ref": "#/components/schemas/ImageContext"
+          },
+          "label_schema": {
+            "$ref": "#/components/schemas/LabelSchema"
+          },
+          "annotation_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "has_objects",
+              "negative"
+            ]
+          },
+          "boxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Box"
+            },
+            "minItems": 0,
+            "maxItems": 1000
+          }
+        },
+        "required": [
+          "task_id",
+          "task_item_id",
+          "submission_id",
+          "review_id",
+          "image",
+          "label_schema",
+          "annotation_revision",
+          "result",
+          "boxes"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "result": {
+                  "const": "has_objects"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            },
+            "then": {
+              "properties": {
+                "boxes": {
+                  "minItems": 1
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "boxes": {
+                  "maxItems": 0
+                }
+              }
+            }
+          }
+        ],
+        "examples": [
+          {
+            "task_id": "00000000-0000-4000-8000-000000000002",
+            "task_item_id": "00000000-0000-4000-8000-000000000003",
+            "submission_id": "00000000-0000-4000-8000-000000000007",
+            "review_id": "00000000-0000-4000-8000-000000000008",
+            "image": {
+              "image_version_id": "00000000-0000-4000-8000-000000000004",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "width": 640,
+              "height": 640
+            },
+            "label_schema": {
+              "id": "00000000-0000-4000-8000-000000000005",
+              "version": 1,
+              "labels": [
+                {
+                  "id": "horse",
+                  "name": "Лошадь"
+                }
+              ]
+            },
+            "annotation_revision": 1,
+            "result": "has_objects",
+            "boxes": [
+              {
+                "id": "00000000-0000-4000-8000-000000000006",
+                "label_id": "horse",
+                "xmin": 100.5,
+                "ymin": 80,
+                "xmax": 310,
+                "ymax": 420,
+                "occluded": false,
+                "truncated": false
+              }
+            ]
+          }
+        ]
+      },
+      "SnapshotContent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "format_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "snapshot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SnapshotItem"
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "format_version",
+          "snapshot_id",
+          "project_id",
+          "created_at",
+          "items"
+        ],
+        "examples": [
+          {
+            "format_version": 1,
+            "snapshot_id": "00000000-0000-4000-8000-000000000009",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "created_at": "2026-11-08T12:00:00Z",
+            "items": [
+              {
+                "task_id": "00000000-0000-4000-8000-000000000002",
+                "task_item_id": "00000000-0000-4000-8000-000000000003",
+                "submission_id": "00000000-0000-4000-8000-000000000007",
+                "review_id": "00000000-0000-4000-8000-000000000008",
+                "image": {
+                  "image_version_id": "00000000-0000-4000-8000-000000000004",
+                  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "width": 640,
+                  "height": 640
+                },
+                "label_schema": {
+                  "id": "00000000-0000-4000-8000-000000000005",
+                  "version": 1,
+                  "labels": [
+                    {
+                      "id": "horse",
+                      "name": "Лошадь"
+                    }
+                  ]
+                },
+                "annotation_revision": 1,
+                "result": "has_objects",
+                "boxes": [
+                  {
+                    "id": "00000000-0000-4000-8000-000000000006",
+                    "label_id": "horse",
+                    "xmin": 100.5,
+                    "ymin": 80,
+                    "xmax": 310,
+                    "ymax": 420,
+                    "occluded": false,
+                    "truncated": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "SnapshotMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "format_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "created_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "item_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "box_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "format_version",
+          "created_by",
+          "created_at",
+          "item_count",
+          "box_count",
+          "sha256"
+        ],
+        "examples": [
+          {
+            "id": "00000000-0000-4000-8000-000000000009",
+            "project_id": "00000000-0000-4000-8000-000000000001",
+            "format_version": 1,
+            "created_by": 2,
+            "created_at": "2026-11-08T12:00:00Z",
+            "item_count": 1,
+            "box_count": 1,
+            "sha256": "245d418c52dd0288b773dbf8096c5625fd417a0dbb00e656694965544f2ce156"
+          }
+        ]
+      },
+      "ValidationViolation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "path",
+          "message"
+        ],
+        "description": "path is a JSON Pointer such as /boxes/0/xmin.",
+        "examples": [
+          {
+            "path": "/boxes/0/xmin",
+            "message": "Coordinate outside image"
+          }
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "request_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "request_id"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "code": {
+                      "const": "validation_error"
+                    }
+                  },
+                  "required": [
+                    "code"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "details": {
+                      "type": "object",
+                      "required": [
+                        "violations"
+                      ],
+                      "properties": {
+                        "violations": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ValidationViolation"
+                          },
+                          "minItems": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "examples": [
+          {
+            "error": {
+              "code": "revision_conflict",
+              "message": "Document revision has changed",
+              "details": {
+                "current_revision": 4
+              },
+              "request_id": "00000000-0000-4000-8000-000000000111"
+            }
+          }
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "ready"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "examples": [
+          {
+            "status": "ok"
+          }
+        ]
+      },
+      "TaskPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "examples": [
+          {
+            "items": [
+              {
+                "id": "00000000-0000-4000-8000-000000000002",
+                "project_id": "00000000-0000-4000-8000-000000000001",
+                "title": "Пакет 1",
+                "assignee_id": 3,
+                "reviewer_id": 4,
+                "state": "in_progress",
+                "task_revision": 1,
+                "item_count": 1,
+                "current_submission_id": null,
+                "created_at": "2026-11-08T12:00:00Z",
+                "updated_at": "2026-11-08T12:00:00Z"
+              }
+            ],
+            "next_cursor": null
+          }
+        ]
+      },
+      "TaskItemPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskItemSummary"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "examples": [
+          {
+            "items": [
+              {
+                "task_item_id": "00000000-0000-4000-8000-000000000003",
+                "image_version_id": "00000000-0000-4000-8000-000000000004",
+                "position": 1,
+                "current_revision": 1,
+                "result": "has_objects"
+              }
+            ],
+            "next_cursor": null
+          }
+        ]
+      },
+      "RevisionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionSummary"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "examples": [
+          {
+            "items": [
+              {
+                "revision": 1,
+                "result": "has_objects",
+                "box_count": 1,
+                "issue_count": 0,
+                "created_by": 3,
+                "created_at": "2026-11-08T12:00:00Z"
+              }
+            ],
+            "next_cursor": null
+          }
+        ]
+      },
+      "SubmissionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubmissionSummary"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "examples": [
+          {
+            "items": [
+              {
+                "id": "00000000-0000-4000-8000-000000000007",
+                "task_id": "00000000-0000-4000-8000-000000000002",
+                "project_id": "00000000-0000-4000-8000-000000000001",
+                "number": 1,
+                "state": "submitted",
+                "submitted_by": 3,
+                "contributor_ids": [
+                  3
+                ],
+                "created_at": "2026-11-08T12:00:00Z",
+                "task_revision": 2
+              }
+            ],
+            "next_cursor": null
+          }
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "invalid_json",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "invalid_json",
+                    "message": "invalid_json",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "unauthenticated",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "unauthenticated",
+                    "message": "unauthenticated",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "forbidden or self_review_forbidden",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "forbidden",
+                    "message": "forbidden or self_review_forbidden",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "not_found (including invisible resources)",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "not_found",
+                    "message": "not_found (including invisible resources)",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Business or revision conflict. No partial mutation.",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "revision_conflict",
+                    "message": "Business or revision conflict. No partial mutation.",
+                    "details": {
+                      "current_revision": 4
+                    },
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error413": {
+        "description": "payload_too_large",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "payload_too_large",
+                    "message": "payload_too_large",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "validation_error",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "validation_error",
+                    "message": "validation_error",
+                    "details": {
+                      "violations": [
+                        {
+                          "path": "/boxes/0/xmin",
+                          "message": "Coordinate outside image"
+                        }
+                      ]
+                    },
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "temporarily_unavailable",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Trace ID for this HTTP attempt",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "error": {
+                "value": {
+                  "error": {
+                    "code": "temporarily_unavailable",
+                    "message": "temporarily_unavailable",
+                    "details": {},
+                    "request_id": "00000000-0000-4000-8000-000000000111"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

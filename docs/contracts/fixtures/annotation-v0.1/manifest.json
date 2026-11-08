@@ -1,0 +1,72 @@
+{
+  "contract_version": "0.1.0",
+  "synthetic": true,
+  "description": "Technical rectangles, not real horses. Three independent synthetic sessions; no shared animal or duplicate bytes.",
+  "project_id": "00000000-0000-4000-8000-000000000001",
+  "actors": {
+    "admin": 1,
+    "manager": 2,
+    "annotator": 3,
+    "reviewer": 4
+  },
+  "frames": [
+    {
+      "file": "synthetic-1.png",
+      "session_id": "00000000-0000-4000-8000-000000000021",
+      "image": {
+        "image_version_id": "00000000-0000-4000-8000-000000000011",
+        "sha256": "b484f69e12002e41511289c6a40f5060ffa750fb832e9f55a12cbba6c861b830",
+        "width": 640,
+        "height": 640
+      },
+      "result": "has_objects",
+      "boxes": [
+        {
+          "id": "00000000-0000-4000-8000-000000000031",
+          "label_id": "horse",
+          "xmin": 80,
+          "ymin": 120,
+          "xmax": 300,
+          "ymax": 400,
+          "occluded": false,
+          "truncated": false
+        }
+      ]
+    },
+    {
+      "file": "synthetic-2.png",
+      "session_id": "00000000-0000-4000-8000-000000000022",
+      "image": {
+        "image_version_id": "00000000-0000-4000-8000-000000000012",
+        "sha256": "5ac1f5da1b6b37bf52d76e619d61a64732764fd5f4f75ec011baa39d99804935",
+        "width": 640,
+        "height": 640
+      },
+      "result": "has_objects",
+      "boxes": [
+        {
+          "id": "00000000-0000-4000-8000-000000000032",
+          "label_id": "horse",
+          "xmin": 320,
+          "ymin": 200,
+          "xmax": 640,
+          "ymax": 640,
+          "occluded": false,
+          "truncated": false
+        }
+      ]
+    },
+    {
+      "file": "synthetic-3.png",
+      "session_id": "00000000-0000-4000-8000-000000000023",
+      "image": {
+        "image_version_id": "00000000-0000-4000-8000-000000000013",
+        "sha256": "278ebf1674c968d28e3b7e1bf0cfab4ee022306aaf48440a704eed28c0c8d3b9",
+        "width": 640,
+        "height": 640
+      },
+      "result": "negative",
+      "boxes": []
+    }
+  ]
+}
