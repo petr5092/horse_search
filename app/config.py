@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
@@ -34,6 +35,21 @@ class Settings(BaseSettings):
     S3_UPLOAD_EXPIRES_SECONDS: int = Field(default=900, ge=1, le=3600)
     S3_DOWNLOAD_EXPIRES_SECONDS: int = Field(default=300, ge=1, le=3600)
 
+    S1_DEV_MODE: bool = False
+    S1_SEED_PASSWORD: str = 's1-local-password-change-me'
+    MIGRATION_DATABASE_URL: Optional[str] = None
+    API_CORS_ORIGINS: list[str] = ['http://localhost:3000', 'http://127.0.0.1:3000']
+    AUTO_CREATE_TABLES: bool = False
+    ENFORCE_MIGRATIONS: bool = True
+    GO_SERVICE_URL: str = 'http://127.0.0.1:8081'
+    GO_SERVICE_TOKEN: str = ''
+    GO_CONNECT_TIMEOUT_SECONDS: float = 5
+    GO_READ_TIMEOUT_SECONDS: float = 30
+    GO_WRITE_TIMEOUT_SECONDS: float = 30
+    GO_POOL_TIMEOUT_SECONDS: float = 5
+    GO_SNAPSHOT_TIMEOUT_SECONDS: float = 120
+    GO_MAX_CONNECTIONS: int = 20
+
     # Initial superuser
     FIRST_SUPERUSER_EMAIL: str = "admin@vim.ru"
     FIRST_SUPERUSER_PASSWORD: str = "admin123"
@@ -54,6 +70,8 @@ class Settings(BaseSettings):
             self.DATABASE_URL = self.DATABASE_URL.replace("sqlite:///", "sqlite+aiosqlite:///")
         elif self.DATABASE_URL.startswith("postgresql://"):
             self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+        if self.MIGRATION_DATABASE_URL:
+            self.MIGRATION_DATABASE_URL = self.MIGRATION_DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://', 1).replace('sqlite:///', 'sqlite+aiosqlite:///', 1)
         return self
 
     class Config:
@@ -61,4 +79,4 @@ class Settings(BaseSettings):
         extra = "allow"
 
 
-settings = Settings()
+settings = Settings(_env_file=os.environ.get('HORSE_ENV_FILE', '.env'))

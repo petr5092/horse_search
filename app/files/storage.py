@@ -65,6 +65,15 @@ class S3Storage:
             if key:
                 self.client.delete_object(Bucket=self.bucket, Key=key)
 
+    def view_url(self, key, content_type):
+        if content_type not in {'image/png', 'image/jpeg', 'image/webp'}:
+            raise InvalidUpload('Only supported image MIME types can be viewed')
+        return self.client.generate_presigned_url(
+            'get_object', Params={'Bucket': self.bucket, 'Key': key,
+                'ResponseContentDisposition': 'inline', 'ResponseContentType': content_type},
+            ExpiresIn=settings.S3_DOWNLOAD_EXPIRES_SECONDS,
+        )
+
     def download_url(self, key, name):
         return self.client.generate_presigned_url(
             "get_object", Params={"Bucket": self.bucket, "Key": key,

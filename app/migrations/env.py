@@ -12,12 +12,15 @@ from app.database import Base
 # Импортируем все модели для autogenerate миграций
 from app.users.models import Users
 from app.files.models import StoredFile
+from app.projects.models import Project, ProjectMember, LabelSchemaVersion
+from app.assets.models import Asset, ImageVersion
+from app.annotation_gateway.models import GatewayOperation, GatewayOperationImage
 
 # this is the Alembic Config object
 config = context.config
 
 # Динамически устанавливаем DATABASE_URL из нашего settings (.env)
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.MIGRATION_DATABASE_URL or settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

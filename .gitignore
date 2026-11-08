@@ -47,3 +47,7 @@ uploads/
 # Environment variables
 .env
 .env.local
+
+# Isolated S1 profile and local smoke journals
+.env.s1
+.s1-smoke-runs/

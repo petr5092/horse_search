@@ -4,6 +4,8 @@ FastAPI backend с JWT-аутентификацией и приватными о
 
 ## Локальный запуск
 
+Для совместной разработки Python S1 и Go используйте [изолированный локальный стенд](docs/python-s1-start.md): PostgreSQL, приватный MinIO, migrations/seed и шлюз.
+
 Рекомендуется Python 3.12+ и Docker Compose для MinIO.
 
 ```sh
@@ -26,8 +28,8 @@ Compose публикует MinIO только на localhost и хранит д�
 Закреплённые образы взяты из официальных релизов [MinIO](https://github.com/minio/minio/releases/tag/RELEASE.2025-04-22T22-12-26Z)
 и [mc](https://github.com/minio/mc/releases/tag/RELEASE.2025-04-16T18-13-26Z).
 
-Существующее приложение создаёт таблицы на старте через `create_all`; для управляемых
-изменений схемы запускайте Alembic до API. Если база уже создана предыдущим
+По умолчанию приложение требует применённых Alembic-миграций;
+запускайте `alembic upgrade head` до API. `AUTO_CREATE_TABLES` выключен. Если база уже создана предыдущим
 приложением и содержит только таблицу `users`, сначала сделайте резервную копию,
 затем `alembic stamp 7b655d5c4ae0` и `alembic upgrade head`.
 Не запускайте `verify_auth.py` на рабочей базе: этот старый скрипт удаляет SQLite-файл.
@@ -216,8 +218,8 @@ python3 scripts/annotation_contract_smoke.py --check-fixtures
 [Техническое задание](docs/go-annotation-service-spec.md) описывает планируемый
 Go-сервис заданий, разметки и рецензии, его интеграцию с FastAPI и критерии
 готовности. [OpenAPI-контракт](docs/contracts/annotation-service.openapi.json)
-содержит схемы и примеры. Версия 0.1.0 находится на согласовании; эти маршруты
-ещё не реализованы в текущем приложении.
+содержит схемы и примеры. Go-сервис реализуется отдельно; Python S1 предоставляет публичный шлюз
+к нему. Состояние реализации и локальный запуск описаны в [инструкции S1](docs/python-s1-start.md).
 
 [План реализации Python-платформы](docs/python-implementation-plan.md) разбивает
 нашу часть на этапы PY00–PY09, определяет зависимости, проверки и точки

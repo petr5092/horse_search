@@ -11,6 +11,8 @@ from starlette.concurrency import run_in_threadpool
 from app.config import settings
 from app.database import async_session_maker
 from app.files.models import StoredFile
+from app.assets.models import Asset, ImageVersion
+from app.projects.models import Project, ProjectMember, LabelSchemaVersion
 from app.files.schemas import DownloadResponse, FileResponse, UploadRequest, UploadResponse
 from app.files.storage import InvalidUpload, get_storage
 from app.users.dependencies import get_current_user
@@ -167,6 +169,16 @@ async def download_file(file_id: UUID, user=Depends(get_current_user),
 async def delete_file(file_id: UUID, user=Depends(get_current_user),
                       session: AsyncSession = Depends(get_session), storage=Depends(get_storage)):
     file = await accessible_file(file_id, user, session)
+    # Serialize attachment and deletion on the same StoredFile row. Re-read
+    # status after acquiring the lock; never delete S3 before checking usages.
+    file = await session.scalar(select(StoredFile).where(StoredFile.id == file.id)
+                                .with_for_update().execution_options(populate_existing=True))
+    if file is None:
+        raise HTTPException(404, 'File not found')
+    source_usage = await session.scalar(select(Asset.id).where(Asset.source_file_id == file.id).limit(1))
+    working_usage = await session.scalar(select(ImageVersion.id).where(ImageVersion.file_id == file.id).limit(1))
+    if source_usage or working_usage:
+        raise HTTPException(409, 'File is referenced by a project asset or image')
     if file.status not in {"pending", "ready"} and not (file.status == "deleting" and stale(file)):
         raise HTTPException(409, "File is being changed; retry")
     started = await claim(file, "deleting", session)

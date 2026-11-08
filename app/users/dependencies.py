@@ -41,7 +41,13 @@ async def get_current_user(token: str = Depends(get_token)) -> Users:
     if not user_id:
         raise UserNotFoundException
 
-    user = await UserDAO.find_by_id(int(user_id))
+    try:
+        parsed_user_id = int(user_id)
+        if str(parsed_user_id) != str(user_id) or not 0 < parsed_user_id <= 2147483647:
+            raise ValueError
+    except (ValueError, TypeError, OverflowError):
+        raise IncorrectTokenFormatException
+    user = await UserDAO.find_by_id(parsed_user_id)
     if not user or not user.is_active:
         raise UserNotFoundException
 
