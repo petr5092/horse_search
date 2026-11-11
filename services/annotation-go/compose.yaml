@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: horse_annotation
+      POSTGRES_USER: annotation_app
+      POSTGRES_PASSWORD: local-dev-password
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - annotation-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U annotation_app -d horse_annotation"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  annotation-postgres-data:
